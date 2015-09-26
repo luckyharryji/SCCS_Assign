@@ -16,3 +16,12 @@ def union_urls(urls):
             print u
             print h
     return urls
+
+def get_int_value(value, default=None):
+    '''
+    transfer the type of the input
+    '''
+    try:
+        return int(value)
+    except:
+        return default
