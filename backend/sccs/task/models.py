@@ -7,20 +7,20 @@ from ..user.models import User
 
 
 class Task(BaseModel):
-    type = IntegerField(default=0)  # 0-普通 1-难题 2-众筹
+    type = IntegerField(default=0)  # 0-normal 1-hard 2-group
     title = CharField()
     content = TextField(null=True)
-    end_date = DateField(null=True)  # 截止日期
-    start_date = DateField(null=True)  # 审核通过的时候算开始时间  Base 里面有一个 create time 是任务提出的时候
-    pick_date = DateField(null=True)  # 领取时间
-    finish_date = DateField(null=True)  # 完成时间
+    end_date = DateField(null=True)  # end date
+    start_date = DateField(null=True)  # after the review, task pushlish date
+    pick_date = DateField(null=True)  # when someone begin to do the task
+    finish_date = DateField(null=True)  # the end data of a task
     addition = TextField(null=True)
-    status = IntegerField(default=0)  # 0-等待审核，1-审核不通过，2-等待认领，3-施工中，4-施工完成等待检查，5-完成，6-关闭
+    status = IntegerField(default=0)  # 0-wait to be review，1-did not pass the review，2-wait to be called by someone，3-on working，4-done, wait to be review，5-done，6-close
     creator = ForeignKeyField(User, related_name='tasks')
     reject_reason = CharField(null=True)
-    credit = IntegerField(default=0)  # 每次追加都会修改，退回或完成时也会做一次统计并写入总额
-    max_worker = IntegerField(default=1)  # 设置最多认领 task 的人数(仅仅对于众筹类task可以修改)
-    finish_worker = IntegerField(default=0)  # 众筹类任务宣布完成的人数
+    credit = IntegerField(default=0)  # will change when : adding , dit not pass the review and was backed
+    max_worker = IntegerField(default=1)  # maxmiun people to do the task
+    finish_worker = IntegerField(default=0)  # the number of people in the group task who claim to finish the task
 
     def to_json(self, simple=False):
         from ..mid_credit.api import get_task_founder
@@ -43,18 +43,18 @@ class Task(BaseModel):
             'finish_worker': self.finish_worker,
         }
         if self.status in (3, 4, 5):
-            # 被认领了,需要显示被认领的人
+            # the job was got by people, show people
             basic['worker'] = [t.user.to_json(simple=True) for t in
                                TaskWorker.select().where(TaskWorker.task == self, TaskWorker.status == 0)]
         if self.type == 2:
-            # 众筹类 task 当有人认领，但总认领人数不到提出者设定的最大参与人时，状态仍为 2
-            # 返回已经已经认领的几个人
+            # group task, when people involve did not meet the maxmium
+            # return the people involved in the group task
             worker = [t.user.to_json(simple=True) for t in
                       TaskWorker.select().where(TaskWorker.task == self, TaskWorker.status == 0)]
             if len(worker) > 0:
                 basic['worker'] = worker
         if self.status in (0, 1, 6):
-            # 等待审核，审核不通过，关闭时显示拒绝原因
+            # wait fot the review
             basic['reject_reason'] = self.reject_reason
         basic['addition'] = self.addition
         return basic
@@ -63,7 +63,7 @@ class Task(BaseModel):
 class TaskWorker(BaseModel):
     user = ForeignKeyField(User, related_name='workers')
     task = ForeignKeyField(Task, related_name='workers_tasks')
-    status = IntegerField(default=0)  # 0-有效， 1-无效（放弃任务，或被移除）
+    status = IntegerField(default=0)  # 0-valid， 1-nonvalid（abandon, remove）
 
     class Meta:
         indexes = (
