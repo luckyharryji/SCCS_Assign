@@ -5,6 +5,6 @@ env/
 *.pyc
 /sccs/*/*.pyc
 
-*/*.pyc
-*/*/*/*.pyc
-*/*/*.pyc
+/*.pyc
+/*/*/*.pyc
+/*/*.pyc

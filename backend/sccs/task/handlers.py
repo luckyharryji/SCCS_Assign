@@ -5,6 +5,8 @@ import json
 from ..base.handlers import BaseHandler
 from ..utils import get_int_value
 
+from datetime import datetime
+
 class TaskListHandler(BaseHandler):
     def get(self):
         '''
@@ -21,4 +23,25 @@ class TaskListHandler(BaseHandler):
         return self.success_response(json.dumps({"name":"test"}))
 
     def post(self):
-        return self.success_response(json.dumps({"name":"test"}))
+        '''
+        create a new task in the system
+        '''
+        try:
+            try:
+                type = int(self.get_argument('type',0))
+            except ValueError:
+                type = 0
+            title = self.get_argument('title')
+            content = self.get_argument('content')
+            end_date = datetime.strptime(self.get_argument('end_date'),'%Y-%m-%d')
+            addition = self.get_argument('addition',None)
+            try:
+                credit = int(self.get_argument('credit'))
+                setting_name = type == 0 and 'easy_task_base_credit' or 'hard_task_base_credit'
+            except ValueError:
+                return self.fail_response(400,'wrong parameter')
+        except MissingArgumentError:
+            return self.fail_response(400,'missing argument')
+        except HTTPError as e:
+            return self.fail_response(e.status_code,'HTTP Error: %s' % e.reason)
+        self.success_response(json.dumps({"name":"test"}))
