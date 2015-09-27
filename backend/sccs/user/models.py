@@ -9,6 +9,7 @@ class User(BaseModel):
     name = CharField()
     credit = IntegerField(default=0)
     img = CharField(null=True)
+    password = CharField()
 
     def to_json(self,simple=False):
         result = {
