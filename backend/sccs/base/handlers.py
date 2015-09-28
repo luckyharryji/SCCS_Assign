@@ -22,3 +22,6 @@ class BaseHandler(RequestHandler):
         result = {'status':status_code, 'error_message':error_message, 'data':None}
         self.set_status(status_code)
         self.write(json_encode(result))
+
+    def get_current_user(self):
+        return self.get_secure_cookie("user")

@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # -*-coding:utf-8-*-
 from tornado.web import HTTPError,MissingArgumentError
+from tornado import escape
+
 import json
 from ..base.handlers import BaseHandler
 from ..utils import get_int_value
+from ..user import api as user_api
+from . import api as task_api
 
 from datetime import datetime
 
@@ -27,6 +31,9 @@ class TaskListHandler(BaseHandler):
         create a new task in the system
         '''
         try:
+            name = escape.xhtml_escape(self.current_user)
+            print name
+            creator = user_api.get_user_by_name(name)
             try:
                 type = int(self.get_argument('type',0))
             except ValueError:
@@ -44,4 +51,15 @@ class TaskListHandler(BaseHandler):
             return self.fail_response(400,'missing argument')
         except HTTPError as e:
             return self.fail_response(e.status_code,'HTTP Error: %s' % e.reason)
-        self.success_response(json.dumps({"name":"test"}))
+        try:
+            if type == 2:
+                try:
+                    max_worker = int(self.get_argument('max_worker', 1))
+                except ValueError:
+                    max_worker = 1
+                t = task_api.create_task(type, title, content, end_date, addition, credit, creator, max_worker)
+            else:
+                t = task_api.create_task(type, title, content, end_date, addition, credit, creator, 1)
+        except AssertionError:
+            return self.fail_response(400, u'Credit is not enough')
+        return self.success_response(t.to_json())

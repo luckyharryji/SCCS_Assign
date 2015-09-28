@@ -3,6 +3,7 @@
 
 settings = {
     'debug': False,
+    'cookie_secret':"cptbtptp"
 }
 
 DATABASE_OPTIONS = {

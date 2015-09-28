@@ -6,6 +6,20 @@ from peewee import IntegrityError
 
 from .models import Task, TaskWorker
 from ..base.models import db
+from ..mid_credit import api as mid_credit_api
+
+def create_task(type, title, content, end_date, addition, credit, creator, max_worker):
+    '''
+    create a task and minus the credit
+    '''
+    if creator.credit < credit:
+        raise AssertionError('Credit is not enough')
+    with db.transaction():
+        task = Task.create(type=type, title=title, content=content, end_date=end_date, addition=addition,
+                           creator=creator, max_worker=max_worker)
+        mid_credit_api.deduct_credit(creator, task, credit)
+    return task
+
 
 def get_task_list(status=None, type=None, order=None, desc=None, page_num=None, page_amount=None):
     '''

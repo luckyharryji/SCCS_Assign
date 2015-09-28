@@ -3,6 +3,7 @@
 
 # api for other service
 from peewee import DoesNotExist
+from tornado import escape
 
 from .models import User
 

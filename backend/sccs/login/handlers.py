@@ -23,6 +23,7 @@ class RegisHandler(BaseHandler):
         print email
         print name
         print password
+        self.set_secure_cookie("user",name)
         try:
             result = user_api.get_user_by_name(name).to_json()
             self.success_response(result)
