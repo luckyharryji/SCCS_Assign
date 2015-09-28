@@ -21,6 +21,12 @@ def create_task(type, title, content, end_date, addition, credit, creator, max_w
     return task
 
 
+def add_task_founder(founder, task, credit):
+    with db.transaction():
+        mid_credit_api.deduct_credit(founder, task, credit)
+    return task
+
+
 def get_task_list(status=None, type=None, order=None, desc=None, page_num=None, page_amount=None):
     '''
     get the list of the task
@@ -65,3 +71,52 @@ def get_task_list(status=None, type=None, order=None, desc=None, page_num=None, 
     if page_amount != None and page_num != None and page_amount > 0 and page_num > 0:
         tasks = tasks.paginate(page_num, page_amount)
     return tasks
+
+
+def get_task_by_id(task_id):
+    return Task.get(id=int(task_id))
+
+def update_task_status(t, status):
+    '''
+    '''
+    with db.transaction():
+        if status == 1 or status == 6:
+            mid_credit_api.return_credit(t)
+        elif status == 5:
+            mid_credit_api.finish_credit(t)
+            t.finish_date = datetime.now()
+        t.status = status
+        t.save()
+    return t
+
+# task worker
+def get_task_worker(t):
+    '''
+    returns a python list of who is doing the task
+    '''
+    return [tw.user for tw in TaskWorker.select().where(TaskWorker.task == t, TaskWorker.status == 0)]
+
+
+def update_task_content(t, title, content, end_date, addition):
+    '''
+    '''
+    t.title = title
+    t.content = content
+    t.end_date = end_date
+    t.addition = addition
+    t.save()
+    return t
+
+
+def add_task_worker(t, user):
+    '''
+    return queue of the helper of the task
+    '''
+    with db.transaction():
+        try:
+            tw = TaskWorker.create(user=user, task=t)
+        except IntegrityError:
+            tw = TaskWorker.get(user=user, task=t)
+            tw.status = 0
+            tw.save()
+    return get_task_worker(t)

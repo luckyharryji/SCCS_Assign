@@ -15,7 +15,7 @@ class Task(BaseModel):
     pick_date = DateField(null=True)  # when someone begin to do the task
     finish_date = DateField(null=True)  # the end data of a task
     addition = TextField(null=True)
-    status = IntegerField(default=0)  # 0-wait to be review，1-did not pass the review，2-wait to be called by someone，3-on working，4-done, wait to be review，5-done，6-close
+    status = IntegerField(default=2)  # 0-wait to be review，1-did not pass the review，2-wait to be called by someone，3-on working，4-done, wait to be review，5-done，6-close
     creator = ForeignKeyField(User, related_name='tasks')
     reject_reason = CharField(null=True)
     credit = IntegerField(default=0)  # will change when : adding , dit not pass the review and was backed
