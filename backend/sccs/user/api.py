@@ -22,3 +22,10 @@ def get_user_by_id(user_id):
     get user by id
     '''
     return User.get(User.id==user_id)
+
+
+def get_user_rank(user):
+    '''
+    get the ranking of credit of user
+    '''
+    return User.select().where(User.credit > user.credit).count() + 1

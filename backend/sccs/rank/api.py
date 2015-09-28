@@ -9,5 +9,5 @@ def get_credit_rank(num=20):
     '''
     get credit ranking
     '''
-    rank_list = User.select().order_by(User.credit).limit(num)
+    rank_list = User.select().order_by(User.credit.desc()).limit(num)
     return [rank.to_json() for rank in rank_list]

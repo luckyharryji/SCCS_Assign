@@ -7,4 +7,5 @@ urls = [
     (r'/found/(\d+)/(\d+)', handlers.FounderHandler),
     (r'/(\d+)/finish', handlers.FinishTaskHandler),
     (r'/(\w+)/rank/task', handlers.RankTaskListHandler),
+    (r'/my/list', handlers.MyTaskListHandler),
 ]

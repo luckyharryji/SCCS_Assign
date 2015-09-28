@@ -67,6 +67,19 @@ class TaskListHandler(BaseHandler):
         return self.success_response(t.to_json())
 
 
+class MyTaskListHandler(BaseHandler):
+    def get(self):
+        '''
+        get task info of the user
+        '''
+        type = get_int_value(self.get_argument('type'))
+        name = escape.xhtml_escape(self.current_user)
+        print name
+        login_user = user_api.get_user_by_name(name)
+        tasks = task_api.get_task_by_user(type, login_user)
+        return self.success_response([t.to_json(simple=True) for t in tasks])
+
+
 class TaskDetailHandler(BaseHandler):
     def get(self, task_id):
         '''
