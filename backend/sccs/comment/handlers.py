@@ -46,9 +46,9 @@ class TaskCommentHandler(BaseHandler):
                 reply = None
             t = task_api.get_task_by_id(taskid)
         except MissingArgumentError:
-            return self.fail_response(400,u'参数错误')
+            return self.fail_response(400,u'wrong parameter')
         except DoesNotExist:
-            return self.fail_response(400,u'豌豆或任务不存在')
+            return self.fail_response(400,u'task does not exist')
         # add comment
         c = comment_api.add_comment(t,login_user,content,reply)
         # email
