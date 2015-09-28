@@ -15,3 +15,10 @@ def get_user_by_name(name):
     get a sprcific user info
     '''
     return User.get(User.name==name)
+
+
+def get_user_by_id(user_id):
+    '''
+    get user by id
+    '''
+    return User.get(User.id==user_id)

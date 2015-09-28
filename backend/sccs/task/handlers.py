@@ -145,6 +145,17 @@ class TaskDetailHandler(BaseHandler):
             return self.fail_response(400, u'task does not exist')
 
 
+class RankTaskListHandler(BaseHandler):
+    def get(self, name):
+        '''
+        get task info from the people in the list
+        '''
+        type = get_int_value(self.get_argument('type'))
+        person = user_api.get_user_by_name(name)
+        tasks = task_api.get_task_by_user(type, person)
+        return self.success_response([t.to_json(simple=True) for t in tasks])
+
+
 class FounderHandler(BaseHandler):
     def post(self, task_id, credit):
         '''
@@ -162,3 +173,72 @@ class FounderHandler(BaseHandler):
             return self.fail_response(e.status_code, e.reason)
         except DoesNotExist:
             return self.fail_response(400, u'task does not exist')
+
+
+
+class FinishTaskHandler(BaseHandler):
+    def post(self, taskid):
+        '''
+        claim to finish
+        '''
+        name = escape.xhtml_escape(self.current_user)
+        login_user = user_api.get_user_by_name(name)
+        try:
+            t = task_api.get_task_by_id(taskid)
+        except DoesNotExist:
+            return self.fail_response(400, u'task does not exist')
+        workers = task_api.get_task_worker(t)
+        if login_user in workers:
+            if t.status == 3:
+                task_api.update_task_status(t, 4)
+                return self.success_response(t.to_json())
+            elif t.status == 2 and t.type == 2:
+                task_api.add_finish_worker(t)
+                if t.finish_worker == len(workers):
+                    task_api.update_task_status(t, 4)
+                    return self.success_response(t.to_json())
+            else:
+                return self.fail_response(400, u'status wrong')
+        else:
+            return self.fail_response(400, u'status or authority wrong')
+
+    def put(self, taskid):
+        '''
+        '''
+        name = escape.xhtml_escape(self.current_user)
+        login_user = user_api.get_user_by_name(name)
+        try:
+            t = task_api.get_task_by_id(taskid)
+        except DoesNotExist:
+            return self.fail_response(400, u'task not exist')
+        type = get_int_value(self.get_argument('type'))
+        reason = self.get_argument('reason', '')
+        workers = task_api.get_task_worker(t)
+        if login_user == t.creator and t.status == 4:
+            if type == 0:
+                t = task_api.update_task_status(t, 5)  # credit done
+            elif type == 1:
+                t = task_api.update_task_status(t, 3)
+            return self.success_response(t.to_json())
+        else:
+            return self.fail_response(400, u'status or authority wrong')
+
+    def delete(self, taskid):
+        '''
+        abandon task
+        '''
+        name = escape.xhtml_escape(self.current_user)
+        login_user = user_api.get_user_by_name(name)
+        try:
+            t = task_api.get_task_by_id(taskid)
+        except DoesNotExist:
+            return self.fail_response(400, u'task not exist')
+        if t.status == 3:
+            task_api.remove_task_worker(t, login_user)
+            workers = task_api.get_task_worker(t)
+            if len(workers) == 0:
+                t.status = 2
+                t.save()
+            return self.success_response(t.to_json())
+        else:
+            return self.fail_response(400, u'status exception')

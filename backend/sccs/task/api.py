@@ -120,3 +120,49 @@ def add_task_worker(t, user):
             tw.status = 0
             tw.save()
     return get_task_worker(t)
+
+
+def add_finish_worker(t):
+    '''
+    for group type task
+    '''
+    with db.transaction():
+        t.finish_worker += 1
+        t.save()
+    return t
+
+def remove_task_worker(t, user):
+    '''
+    '''
+    try:
+        tw = TaskWorker.get(user=user, task=t)
+        tw.status = 1
+        tw.save()
+    except TaskWorker.DoesNotExist:
+        pass
+    finally:
+        return get_task_worker(t)
+
+
+def get_task_by_user(type, login_user, return_count=False):
+    '''
+    '''
+    if type == 0:
+        tasks = [t for t in Task.select().where(Task.creator == login_user)]
+    elif type == 1:
+        tws = TaskWorker.select().where(TaskWorker.user == login_user, TaskWorker.status == 0)
+        tasks = [tw.task for tw in tws if tw.task.status == 3 or tw.task.status == 4]
+    elif type == 2:
+        tws = TaskWorker.select().where(TaskWorker.user == login_user, TaskWorker.status == 0)
+        tasks = [tw.task for tw in tws if tw.task.status == 5]
+    elif type == 3:
+        related_tasks = mid_credit_api.get_tasks_from_user(login_user)
+        tasks = [t for t in related_tasks if t.status in (2, 3, 4, 5) and t.creator != login_user]
+    elif type == 4:
+        tasks = [t for t in Task.select().where(Task.status == 4, Task.creator == login_user)]
+    else:
+        return None
+    if return_count:
+        return len(tasks)
+    else:
+        return tasks

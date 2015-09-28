@@ -19,3 +19,18 @@ class CurrentUserHandler(BaseHandler):
         user=user_api.get_user_by_name(name)
         result = user.to_json()
         return self.success_response(result)
+
+class ShowPeopleCreditHandler(BaseHandler):
+    def get(self,userid):
+        '''
+        credit change in rank list
+        '''
+        target_user = user_api.get_user_by_id(userid)
+        all_log = get_int_value(self.get_argument('all',None),None)
+        if all_log == 1:
+            logs = mid_credit_api.get_credit_log_by_user(target_user,num='all')
+        else:
+            logs = mid_credit_api.get_credit_log_by_user(target_user)
+        mids = mid_credit_api.get_mid_credit_from_user(target_user)
+        result = {'log':[log.to_json() for log in logs],'middle':[m.to_json() for m in mids if m.credit > 0]}
+        return self.success_response(result)

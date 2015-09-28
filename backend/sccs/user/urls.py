@@ -4,4 +4,5 @@ from . import handlers
 
 urls = [
     (r'/current',handlers.CurrentUserHandler),
+    (r'/(\d+)/people/credit',handlers.ShowPeopleCreditHandler),
 ]
